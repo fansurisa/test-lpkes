@@ -4,9 +4,8 @@ nixPkgs = ["composer"]
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs",
-  "php artisan vendor:publish --tag=filament-assets --force",
-  "php artisan vendor:publish --tag=livewire:assets --force"
+  "php artisan vendor:publish --tag=filament-assets --force"
 ]
 
 [start]
-cmd = "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "php artisan config:cache && php artisan route:cache && php artisan storage:link && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public"
