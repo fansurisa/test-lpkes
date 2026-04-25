@@ -3,7 +3,9 @@ nixPkgs = ["composer"]
 
 [phases.build]
 cmds = [
-  "composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs"
+  "composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs",
+  "php artisan vendor:publish --tag=filament-assets --force",
+  "php artisan vendor:publish --tag=livewire:assets --force"
 ]
 
 [start]
