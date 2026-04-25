@@ -185,6 +185,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($samples as $s) {
             $cat = Category::where('slug', $s['category'])->first();
+            unset($s["category"]);
             Training::firstOrCreate(
                 ['slug' => Str::slug($s['title'])],
                 array_merge($s, [
