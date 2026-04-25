@@ -1,9 +1,11 @@
 [phases.setup]
-nixPkgs = ["composer"]
+nixPkgs = ["composer", "nodejs", "npm"]
 
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs",
+  "npm install",
+  "npm run build",
   "php artisan vendor:publish --tag=filament-assets --force"
 ]
 
