@@ -166,7 +166,7 @@
                     @else
                         @auth
                             @if($training->is_free)
-                                <form method="POST" action="{{ route('enrollments.checkout', $training) }}">
+                                <form method="POST" action="{{ route('enrollments.free', $training) }}">
                                     @csrf
                                     <button type="submit" class="btn-primary w-full mb-3">
                                         Daftar Gratis Sekarang
