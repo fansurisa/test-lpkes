@@ -7,6 +7,7 @@ use App\Filament\Resources\OrderResource;
 use App\Filament\Resources\SkpRecordResource;
 use App\Filament\Resources\TrainingResource;
 use App\Filament\Resources\UserResource;
+use App\Filament\Widgets\ActiveUpcomingTrainingsWidget;
 use App\Filament\Widgets\EnrollmentChartWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\TopTrainingsWidget;
@@ -52,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 StatsOverviewWidget::class,
                 EnrollmentChartWidget::class,
                 UserTypeChartWidget::class,
+                ActiveUpcomingTrainingsWidget::class,
                 TopTrainingsWidget::class,
             ])
             ->middleware([

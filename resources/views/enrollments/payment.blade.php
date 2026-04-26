@@ -48,8 +48,8 @@
                 return;
             }
             snap.pay('{{ $order->snap_token }}', {
-                onSuccess: function() { window.location.href = '{{ route('enrollments.success', $training->slug) }}'; },
-                onPending: function() { window.location.href = '{{ route('enrollments.success', $training->slug) }}'; },
+                onSuccess: function() { window.location.href = '{{ route('enrollments.success', $training) }}'; },
+                onPending: function() { window.location.href = '{{ route('enrollments.success', $training) }}'; },
                 onError:   function() { alert('Pembayaran gagal. Silakan coba lagi.'); },
                 onClose:   function() { console.log('Popup ditutup'); }
             });

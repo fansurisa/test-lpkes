@@ -7,17 +7,19 @@ use Filament\Widgets\ChartWidget;
 
 class EnrollmentChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Pendaftaran 12 Bulan Terakhir';
-    protected static ?int $sort = 2;
+    protected static ?string $heading = 'Pendaftaran 6 Bulan Terakhir';
+    protected static ?int    $sort    = 2;
+    protected static ?string $maxHeight = '180px';
+    protected int | string | array $columnSpan = 1;
 
     protected function getData(): array
     {
         $data   = [];
         $labels = [];
 
-        for ($i = 11; $i >= 0; $i--) {
+        for ($i = 5; $i >= 0; $i--) {
             $month    = now()->subMonths($i);
-            $labels[] = $month->format('M Y');
+            $labels[] = $month->format('M');
             $data[]   = Enrollment::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->count();
@@ -28,10 +30,9 @@ class EnrollmentChartWidget extends ChartWidget
                 [
                     'label'           => 'Pendaftaran',
                     'data'            => $data,
-                    'borderColor'     => '#0ea5e9',
-                    'backgroundColor' => 'rgba(14,165,233,0.1)',
-                    'fill'            => true,
-                    'tension'         => 0.3,
+                    'backgroundColor' => 'rgba(14,165,233,0.8)',
+                    'borderRadius'    => 4,
+                    'borderSkipped'   => false,
                 ],
             ],
             'labels' => $labels,
@@ -40,6 +41,21 @@ class EnrollmentChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => ['display' => false],
+            ],
+            'scales' => [
+                'y' => [
+                    'ticks' => ['stepSize' => 1],
+                    'beginAtZero' => true,
+                ],
+            ],
+        ];
     }
 }

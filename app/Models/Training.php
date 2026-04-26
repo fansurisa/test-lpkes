@@ -15,7 +15,7 @@ class Training extends Model
     protected $fillable = [
         'title', 'slug', 'type', 'category_id', 'description', 'objectives',
         'thumbnail', 'price', 'is_free', 'skp_value', 'pelataran_link',
-        'schedule', 'duration', 'max_participants', 'is_published',
+        'schedule', 'registration_deadline', 'duration', 'max_participants', 'is_published',
         'trainer_name', 'trainer_title', 'trainer_avatar', 'trainer_bio',
     ];
 
@@ -26,7 +26,8 @@ class Training extends Model
             'is_published'   => 'boolean',
             'price'          => 'decimal:2',
             'skp_value'      => 'integer',
-            'schedule'       => 'datetime',
+            'schedule'               => 'datetime',
+            'registration_deadline'  => 'datetime',
         ];
     }
 
@@ -62,6 +63,68 @@ class Training extends Model
     public function hasSkp(): bool
     {
         return $this->skp_value > 0;
+    }
+
+    /**
+     * Returns: 'akan_datang' | 'segera_tutup' | 'ditutup' | 'selesai' | ''
+     */
+    public function getEventStatusAttribute(): string
+    {
+        if (! $this->schedule) {
+            return '';
+        }
+
+        if ($this->schedule->isPast()) {
+            return 'selesai';
+        }
+
+        if ($this->registration_deadline) {
+            if ($this->registration_deadline->isPast()) {
+                return 'ditutup';
+            }
+            if (now()->startOfDay()->diffInDays($this->registration_deadline->startOfDay()) <= 3) {
+                return 'segera_tutup';
+            }
+        }
+
+        return 'akan_datang';
+    }
+
+    /**
+     * Whole days from today until registration_deadline. Negative = past.
+     */
+    public function getDaysUntilDeadlineAttribute(): ?int
+    {
+        if (! $this->registration_deadline) {
+            return null;
+        }
+        return (int) now()->startOfDay()->diffInDays($this->registration_deadline->startOfDay(), false);
+    }
+
+    /**
+     * Short label like "Tutup hari ini", "Tutup besok", "Tutup 3 hari".
+     */
+    public function getDeadlineCountdownLabelAttribute(): ?string
+    {
+        $days = $this->days_until_deadline;
+        if ($days === null) {
+            return null;
+        }
+        if ($days < 0)  return 'Reg. Ditutup';
+        if ($days === 0) return 'Tutup hari ini';
+        if ($days === 1) return 'Tutup besok';
+        return "Tutup {$days} hari";
+    }
+
+    public function isClosingSoon(): bool
+    {
+        if (! $this->registration_deadline || ! $this->schedule) {
+            return false;
+        }
+
+        return ! $this->schedule->isPast()
+            && $this->registration_deadline->isFuture()
+            && now()->startOfDay()->diffInDays($this->registration_deadline->startOfDay()) <= 3;
     }
 
     public function getFormattedPriceAttribute(): string

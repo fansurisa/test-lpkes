@@ -45,10 +45,25 @@ class CatalogController extends Controller
             }
         }
 
+        if ($request->filled('date_from')) {
+            $query->whereDate('schedule', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('schedule', '<=', $request->date_to);
+        }
+
         $trainings  = $query->latest()->paginate(12)->withQueryString();
         $categories = Category::all();
 
-        return view('catalog.index', compact('trainings', 'categories'));
+        $allSchedules = Training::published()
+            ->whereNotNull('schedule')
+            ->selectRaw('DATE(schedule) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date')
+            ->toArray();
+
+        return view('catalog.index', compact('trainings', 'categories', 'allSchedules'));
     }
 
     public function show(string $slug)
@@ -65,6 +80,8 @@ class CatalogController extends Controller
         }
 
         $related = Training::published()
+            ->with(['category'])
+            ->withCount('enrollments')
             ->where('category_id', $training->category_id)
             ->where('id', '!=', $training->id)
             ->limit(4)

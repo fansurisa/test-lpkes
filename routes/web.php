@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\ProfileCompletionController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
@@ -55,6 +56,16 @@ Route::middleware(['auth', 'profile.completed'])->group(function () {
 
     Route::get('/dashboard/profil', [DashboardController::class, 'profile'])->name('dashboard.profile');
     Route::patch('/dashboard/profil', [DashboardController::class, 'updateProfile'])->name('dashboard.profile.update');
+
+    // Cart
+    Route::get('/keranjang',          [CartController::class, 'index'])->name('cart.index');
+    Route::get('/keranjang/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+    Route::post('/keranjang/bayar',   [CartController::class, 'pay'])->name('cart.pay');
+    Route::post('/keranjang/skip-payment', [CartController::class, 'skipPay'])->name('cart.skip');
+    Route::get('/keranjang/sukses',   [CartController::class, 'success'])->name('cart.success');
+    Route::delete('/keranjang',          [CartController::class, 'clear'])->name('cart.clear');
+    Route::post('/keranjang/{training}', [CartController::class, 'add'])->name('cart.add');
+    Route::delete('/keranjang/{training}', [CartController::class, 'remove'])->name('cart.remove');
 
     // Enrollments
     Route::get('/daftar/{training}', [EnrollmentController::class, 'checkout'])

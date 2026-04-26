@@ -100,8 +100,8 @@
                          x-transition:enter="transition ease-out duration-150"
                          x-transition:enter-start="opacity-0"
                          x-transition:enter-end="opacity-100">
-                        <a href="{{ route('catalog.show', $enrollment->training->slug) }}"
-                           class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group block">
+                        <div class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group select-none cursor-pointer"
+                             @click="window.location='{{ route('catalog.show', $enrollment->training->slug) }}'">
                             <img src="{{ $enrollment->training->thumbnail_url }}"
                                  alt="{{ $enrollment->training->title }}"
                                  class="w-14 h-14 rounded-lg object-cover flex-shrink-0">
@@ -123,17 +123,23 @@
                                 <span class="px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClasses[$enrollment->status] ?? 'bg-gray-100 text-gray-600' }}">
                                     {{ $enrollment->status_label }}
                                 </span>
-                                @if($enrollment->status === 'active' && $enrollment->training->pelataran_link)
-                                    <span @click.prevent="window.open('{{ $enrollment->training->pelataran_link }}', '_blank')"
-                                          class="text-primary-600 hover:text-primary-700 text-xs font-medium whitespace-nowrap cursor-pointer">
-                                        Buka →
-                                    </span>
+                                @if(in_array($enrollment->status, ['active', 'completed']))
+                                    @if($enrollment->training->pelataran_link)
+                                        <a href="{{ $enrollment->training->pelataran_link }}" target="_blank"
+                                           @click.stop
+                                           class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 whitespace-nowrap border border-primary-200 hover:border-primary-400 rounded-lg px-2.5 py-1 transition-colors">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                            Buka Link
+                                        </a>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic whitespace-nowrap" @click.stop>Link belum tersedia</span>
+                                    @endif
                                 @endif
                                 <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </div>
-                        </a>
+                        </div>
                     </div>
                 @endforeach
 

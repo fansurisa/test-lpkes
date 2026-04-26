@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use Illuminate\Support\Collection;
 
 class MidtransService
 {
@@ -37,6 +38,38 @@ class MidtransService
                     'name'     => substr($training->title, 0, 50),
                 ],
             ],
+        ];
+
+        return \Midtrans\Snap::getSnapToken($params);
+    }
+
+    /**
+     * Snap token for a batch — multiple orders sharing the same midtrans_order_id.
+     * Each order's training becomes one item_details row.
+     */
+    public function createBatchSnapToken(Collection $orders): string
+    {
+        $first = $orders->first();
+        $user  = $first->user;
+
+        $items = $orders->map(fn (Order $o) => [
+            'id'       => (string) $o->training_id,
+            'price'    => (int) $o->amount,
+            'quantity' => 1,
+            'name'     => substr($o->training->title, 0, 50),
+        ])->values()->all();
+
+        $params = [
+            'transaction_details' => [
+                'order_id'     => $first->midtrans_order_id,
+                'gross_amount' => (int) $orders->sum('amount'),
+            ],
+            'customer_details' => [
+                'first_name' => $user->name,
+                'email'      => $user->email,
+                'phone'      => $user->phone,
+            ],
+            'item_details' => $items,
         ];
 
         return \Midtrans\Snap::getSnapToken($params);

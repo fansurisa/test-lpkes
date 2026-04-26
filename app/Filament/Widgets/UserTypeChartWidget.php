@@ -7,8 +7,10 @@ use Filament\Widgets\ChartWidget;
 
 class UserTypeChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Rasio Nakes vs Non-Nakes';
-    protected static ?int $sort = 3;
+    protected static ?string $heading    = 'Komposisi Pengguna';
+    protected static ?int    $sort       = 3;
+    protected static ?string $maxHeight  = '180px';
+    protected int | string | array $columnSpan = 1;
 
     protected function getData(): array
     {
@@ -20,7 +22,9 @@ class UserTypeChartWidget extends ChartWidget
             'datasets' => [
                 [
                     'data'            => [$nakes, $nonNakes, $other],
-                    'backgroundColor' => ['#22c55e', '#0ea5e9', '#94a3b8'],
+                    'backgroundColor' => ['#22c55e', '#0ea5e9', '#64748b'],
+                    'borderWidth'     => 0,
+                    'hoverOffset'     => 4,
                 ],
             ],
             'labels' => ['Tenaga Kesehatan', 'Masyarakat Umum', 'Belum Lengkap'],
@@ -30,5 +34,18 @@ class UserTypeChartWidget extends ChartWidget
     protected function getType(): string
     {
         return 'doughnut';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => [
+                    'position' => 'bottom',
+                    'labels'   => ['boxWidth' => 10, 'padding' => 10],
+                ],
+            ],
+            'cutout' => '65%',
+        ];
     }
 }

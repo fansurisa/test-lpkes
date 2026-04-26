@@ -22,6 +22,13 @@ class EnrollmentController extends Controller
                 ->with('info', 'Anda sudah terdaftar di pelatihan ini.');
         }
 
+        if (in_array($training->event_status, ['selesai', 'ditutup'], true)) {
+            return redirect()->route('catalog.show', $training->slug)
+                ->with('error', $training->event_status === 'selesai'
+                    ? 'Pelatihan ini telah selesai.'
+                    : 'Pendaftaran pelatihan ini sudah ditutup.');
+        }
+
         if ($training->isFull()) {
             return redirect()->route('catalog.show', $training->slug)
                 ->with('error', 'Maaf, kuota pelatihan ini sudah penuh.');
@@ -45,7 +52,7 @@ class EnrollmentController extends Controller
             ]);
         });
 
-        return redirect()->route('enrollments.success', $training->slug)
+        return redirect()->route('enrollments.success', $training)
             ->with('success', 'Pendaftaran berhasil! Selamat belajar.');
     }
 
@@ -105,7 +112,7 @@ class EnrollmentController extends Controller
 
         $order->enrollment?->update(['status' => 'active']);
 
-        return redirect()->route('enrollments.success', $training->slug)
+        return redirect()->route('enrollments.success', $training)
             ->with('success', 'Pembayaran (DEV SKIP) berhasil. Akses pelatihan sudah aktif.');
     }
 
@@ -125,25 +132,30 @@ class EnrollmentController extends Controller
     {
         $payload = $this->midtrans->handleNotification($request->all());
 
-        $order = Order::where('midtrans_order_id', $payload['order_id'])->firstOrFail();
+        $orders = Order::where('midtrans_order_id', $payload['order_id'])->get();
+        abort_if($orders->isEmpty(), 404);
 
         $status = $payload['transaction_status'];
 
-        if (in_array($status, ['capture', 'settlement'])) {
-            $order->update([
-                'status'                  => 'paid',
-                'payment_method'          => $payload['payment_type'] ?? null,
-                'midtrans_transaction_id' => $payload['transaction_id'] ?? null,
-                'paid_at'                 => now(),
-                'midtrans_response'       => $payload,
-            ]);
-            $order->enrollment?->update(['status' => 'active']);
-        } elseif (in_array($status, ['deny', 'expire', 'cancel'])) {
-            $order->update([
-                'status'            => 'failed',
-                'midtrans_response' => $payload,
-            ]);
-        }
+        DB::transaction(function () use ($orders, $payload, $status) {
+            foreach ($orders as $order) {
+                if (in_array($status, ['capture', 'settlement'])) {
+                    $order->update([
+                        'status'                  => 'paid',
+                        'payment_method'          => $payload['payment_type'] ?? null,
+                        'midtrans_transaction_id' => $payload['transaction_id'] ?? null,
+                        'paid_at'                 => now(),
+                        'midtrans_response'       => $payload,
+                    ]);
+                    $order->enrollment?->update(['status' => 'active']);
+                } elseif (in_array($status, ['deny', 'expire', 'cancel'])) {
+                    $order->update([
+                        'status'            => 'failed',
+                        'midtrans_response' => $payload,
+                    ]);
+                }
+            }
+        });
 
         return response()->json(['status' => 'ok']);
     }

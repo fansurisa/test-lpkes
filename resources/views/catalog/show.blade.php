@@ -151,20 +151,38 @@
                     </div>
 
                     {{-- CTA --}}
+                    @php $eventStatus = $training->event_status; @endphp
                     @if($enrolled)
                         <div class="alert-success mb-4 text-center font-medium">
                             ✓ Anda sudah terdaftar
                         </div>
                         @if($training->pelataran_link)
                             <a href="{{ $training->pelataran_link }}" target="_blank"
-                               class="btn-primary w-full mb-3">
-                                Buka di Pelataran Kemenkes
+                               class="btn-primary w-full mb-3 flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                Buka Link Pembelajaran
                             </a>
+                        @else
+                            <div class="w-full mb-3 flex items-center justify-center gap-2 bg-gray-100 text-gray-400 text-sm font-medium py-2.5 px-4 rounded-xl cursor-not-allowed select-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                Link pembelajaran belum tersedia
+                            </div>
                         @endif
+                    @elseif($eventStatus === 'selesai')
+                        <div class="mb-3 rounded-xl bg-gray-100 border border-gray-200 px-4 py-3 text-center">
+                            <p class="text-sm font-semibold text-gray-700">Pelatihan Telah Selesai</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Pendaftaran tidak lagi tersedia.</p>
+                        </div>
+                    @elseif($eventStatus === 'ditutup')
+                        <div class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-center">
+                            <p class="text-sm font-semibold text-red-700">Pendaftaran Ditutup</p>
+                            <p class="text-xs text-red-500 mt-0.5">Tutup pada {{ $training->registration_deadline->format('d M Y') }}.</p>
+                        </div>
                     @elseif($training->isFull())
                         <div class="alert-error mb-3 text-center">Kuota sudah penuh</div>
                     @else
                         @auth
+                            @php $inCart = \App\Models\CartItem::where('user_id', auth()->id())->where('training_id', $training->id)->exists(); @endphp
                             @if($training->is_free)
                                 <form method="POST" action="{{ route('enrollments.free', $training) }}">
                                     @csrf
@@ -173,10 +191,23 @@
                                     </button>
                                 </form>
                             @else
-                                <a href="{{ route('enrollments.checkout', $training) }}" class="btn-primary w-full mb-3 block text-center">
-                                    Daftar Sekarang
+                                <a href="{{ route('enrollments.checkout', $training) }}" class="btn-primary w-full mb-3 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                    Daftar & Bayar Sekarang
                                 </a>
                             @endif
+                            {{-- Cart button --}}
+                            <form method="POST" action="{{ $inCart ? route('cart.remove', $training) : route('cart.add', $training) }}">
+                                @csrf
+                                @if($inCart) @method('DELETE') @endif
+                                <button type="submit" class="btn-outline w-full flex items-center justify-center gap-2 mb-3
+                                    {{ $inCart ? 'border-primary-400 text-primary-600 bg-primary-50' : '' }}">
+                                    <svg class="w-4 h-4" fill="{{ $inCart ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    {{ $inCart ? 'Tersimpan di Keranjang' : 'Simpan ke Keranjang' }}
+                                </button>
+                            </form>
                         @else
                             <a href="{{ route('login') }}" class="btn-primary w-full mb-3 block text-center">
                                 Masuk untuk Mendaftar

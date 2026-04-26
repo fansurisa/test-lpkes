@@ -1,0 +1,69 @@
+@extends('layouts.app')
+
+@section('title', 'Pembayaran Keranjang')
+
+@section('content')
+<div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="card p-8 text-center">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+        </div>
+
+        <h1 class="text-xl font-bold text-gray-900 mb-1">Selesaikan Pembayaran</h1>
+        <p class="text-gray-500 text-sm mb-2">{{ $orders->count() }} pelatihan dalam satu transaksi</p>
+        <p class="text-3xl font-extrabold text-primary-600 mb-6">Rp {{ number_format($total, 0, ',', '.') }}</p>
+
+        {{-- Order list --}}
+        <ul class="text-left bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
+            @foreach($orders as $order)
+                <li class="flex justify-between text-sm">
+                    <span class="text-gray-700 truncate flex-1 mr-3">{{ $order->training->title }}</span>
+                    <span class="font-semibold text-gray-900">Rp {{ number_format($order->amount, 0, ',', '.') }}</span>
+                </li>
+            @endforeach
+        </ul>
+
+        <button id="pay-button" class="btn-primary w-full text-base py-3">
+            Buka Halaman Pembayaran
+        </button>
+        <p class="text-xs text-gray-400 mt-3">Anda akan diarahkan ke halaman pembayaran Midtrans yang aman.</p>
+
+        @if(! app()->isProduction())
+            <div class="mt-6 pt-6 border-t border-dashed border-gray-300">
+                <p class="text-xs text-gray-400 mb-2">⚙️ Development mode</p>
+                <form method="POST" action="{{ route('cart.skip') }}">
+                    @csrf
+                    <input type="hidden" name="midtrans_order_id" value="{{ $midtransOrderId }}">
+                    <button type="submit"
+                            class="w-full px-5 py-2.5 rounded-lg bg-amber-100 text-amber-800 font-semibold text-sm hover:bg-amber-200 border border-amber-300 transition-colors">
+                        ⚡ Skip Pembayaran (Dev)
+                    </button>
+                </form>
+            </div>
+        @endif
+    </div>
+</div>
+
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('midtrans.client_key') }}"></script>
+<script>
+    const successUrl = '{{ route('cart.success', ['batch' => $midtransOrderId]) }}';
+    const snapToken  = @json($snapToken);
+
+    document.getElementById('pay-button').addEventListener('click', function () {
+        if (! snapToken) {
+            alert('Snap token tidak tersedia. Pastikan MIDTRANS_SERVER_KEY sudah diisi di .env');
+            return;
+        }
+        snap.pay(snapToken, {
+            onSuccess: function () { window.location.href = successUrl; },
+            onPending: function () { window.location.href = successUrl; },
+            onError:   function () { alert('Pembayaran gagal. Silakan coba lagi.'); },
+            onClose:   function () { console.log('Popup ditutup'); }
+        });
+    });
+</script>
+@endsection
